@@ -43,8 +43,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd chat-app-basic
-            cd client
+            cd dashboard-rechart-basic
             sudo docker compose pull
             sudo docker compose up -d
             sudo docker image prune -f
