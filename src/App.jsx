@@ -1,4 +1,6 @@
 import "./App.css";
+import mqtt from "mqtt";
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -31,9 +33,52 @@ function generateRandomData() {
 
 function App() {
   const data = generateRandomData();
+  const [mqttData, setMqttData] = useState([]);
+
+  useEffect(() => {
+    const client = mqtt.connect("ws://54.153.176.0:9001");
+    console.log("hello", client);
+    const topic = "test/topic";
+
+    client.on("connect", () => {
+      console.log("Connected to MQTT broker");
+
+      client.subscribe(topic, (err) => {
+        if (!err) {
+          console.log(`Subscribed to topic: ${topic}`);
+        } else {
+          console.error("Subscription error:", err);
+        }
+      });
+    });
+
+    client.on("message", (topic, message) => {
+      setMqttData((prevMessages) => [
+        ...prevMessages,
+        JSON.parse(message.toString()),
+      ]);
+    });
+
+    // Cleanup function to disconnect on component unmount
+    return () => {
+      client.end();
+    };
+  }, []);
 
   return (
-    <div style={{ display: "flex", width:'100vw',justifyContent: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100vw",
+        alignItems: "center",
+      }}
+    >
+      {mqttData.map((data, index) => (
+        <div key={index}>
+          <p>{data.msg}</p>
+        </div>
+      ))}
       <LineChart width={1000} height={300} data={data}>
         <CartesianGrid strokeDasharray={"3 3"} />
         <XAxis dataKey={"timestamp"} />
