@@ -20,18 +20,18 @@ function generateRandomData() {
   const data = [];
   let currentTime = startDate;
 
-  var ws;
-  var apiKey = "ca178ecd89b12f332a53661d953491a5";
-  ws = new WebSocket("ws://technest.ddns.net:8001/ws");
+  // var ws;
+  // var apiKey = "ca178ecd89b12f332a53661d953491a5";
+  // ws = new WebSocket("ws://technest.ddns.net:8001/ws");
 
 
-  ws.onopen = function (event) {
-    ws.send(apiKey);
-  };
+  // ws.onopen = function (event) {
+  //   ws.send(apiKey);
+  // };
 
-  ws.onmessage = async function (event) {
-    console.log(event.data);
-  };
+  // ws.onmessage = async function (event) {
+  //   console.log(event.data);
+  // };
 
   while (currentTime <= endDate) {
     const timestamp = currentTime.toLocaleTimeString("en-GB", {
