@@ -20,10 +20,26 @@ function generateRandomData() {
   const data = [];
   let currentTime = startDate;
 
-  while (currentTime <= endDate) {
-    const timestamp = currentTime.toISOString();
-    const x = Math.random();
+  var ws;
+  var apiKey = "ca178ecd89b12f332a53661d953491a5";
+  ws = new WebSocket("ws://technest.ddns.net:8001/ws");
 
+
+  ws.onopen = function (event) {
+    ws.send(apiKey);
+  };
+
+  ws.onmessage = async function (event) {
+    console.log(event.data);
+  };
+
+  while (currentTime <= endDate) {
+    const timestamp = currentTime.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const x = Math.random();
     data.push({ timestamp, x });
 
     currentTime = new Date(currentTime.getTime() + intervalMinutes * 60 * 1000);
@@ -32,17 +48,15 @@ function generateRandomData() {
 }
 
 function App() {
-  const data = generateRandomData();
+  const [data, setData] = useState(generateRandomData());
   const [mqttData, setMqttData] = useState([]);
 
   useEffect(() => {
     const client = mqtt.connect("ws://54.153.176.0:9001");
-    console.log("hello", client);
     const topic = "test/topic";
 
     client.on("connect", () => {
       console.log("Connected to MQTT broker");
-
       client.subscribe(topic, (err) => {
         if (!err) {
           console.log(`Subscribed to topic: ${topic}`);
@@ -53,10 +67,27 @@ function App() {
     });
 
     client.on("message", (topic, message) => {
-      setMqttData((prevMessages) => [
-        ...prevMessages,
-        JSON.parse(message.toString()),
-      ]);
+      try {
+        const parsedMessage = JSON.parse(message.toString());
+        const timestamp = new Date("2024-02-14T07:00:00Z").toLocaleTimeString(
+          "en-GB",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        );
+
+        const newData = { timestamp, x: 20 };
+
+        // Update data state with new MQTT message
+        const interval = setInterval(() => {
+          setData((prevData) => [...prevData, newData]);
+          setMqttData((prevMessages) => [...prevMessages, parsedMessage]);
+        }, 1000);
+        return () => clearInterval(interval);
+      } catch (error) {
+        console.error("Error parsing MQTT message:", error);
+      }
     });
 
     // Cleanup function to disconnect on component unmount
